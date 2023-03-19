@@ -1,0 +1,15 @@
+{
+  "development": {
+    "username": "NPT-Dark",
+    "password": "XbRC21AnplMt",
+    "database": "Chat-NPT",
+    "host": "ep-shiny-field-323059.us-east-2.aws.neon.tech",
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
+  }
+}

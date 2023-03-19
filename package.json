@@ -1,0 +1,25 @@
+{
+  "name": "chat-npt-server",
+  "version": "1.0.0",
+  "description": "this is a server of chat-npt",
+  "main": "index.js",
+  "repository": "https://github.com/NPT-Dark/chat-npt-server.git",
+  "author": "NPT-Dark",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.0.3",
+    "email-validator": "^2.0.4",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "pg": "^8.10.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.29.3",
+    "sequelize-cli": "^6.6.0",
+    "uuid": "^9.0.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "build": "node index.js"
+  }
+}
