@@ -3,10 +3,8 @@ const bcrypt = require("bcryptjs")
 const CreateToken = async(id)=>{
     return JWT.sign({
         iss: 'NPT',
-        sub:id,
-        iat: new Date().getTime(),
-        exp: new Date().setDate(new Date().getDate()+3)
-    },process.env.SECRET_KEY)
+        sub:id
+    },process.env.SECRET_KEY,{expiresIn:"3h"})
 }
 const HashPassword = async(password)=>{
     const salt = await bcrypt.genSalt(10)

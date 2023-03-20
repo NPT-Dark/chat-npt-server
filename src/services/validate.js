@@ -9,7 +9,6 @@ const ValidateLength = (value,max,min) =>{
         return false
     }
     if(min != null){
-        console.log(value,min);
         if(value > min)
         {
             return true
