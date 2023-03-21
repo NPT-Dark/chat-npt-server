@@ -56,10 +56,6 @@ const SignIn = async (req, res) => {
           findUser.passWord
         );
         if (checkPass) {
-          res.cookie("token", findUser.token, {
-            secure: true,
-            httpOnly: true,
-          });
           return res.status(200).json(findUser.token);
         }
         return res.status(500).json("Password is incorrect !");
