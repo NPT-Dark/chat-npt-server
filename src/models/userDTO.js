@@ -1,11 +1,11 @@
 const {v4 : newID} = require("uuid")
 const { CreateToken, HashPassword } = require("../services/secret")
 const createUserDTO = async (request) =>{
-    const ID = newID()
-    const token = await CreateToken(ID)
+    const idUser = newID()
+    const token = await CreateToken(idUser)
     const passwordHash = await HashPassword(request.password)
     const newUser = {
-        id:ID,
+        id:idUser,
         avatar:request.avatar,
         firstName: request.firstname,
         lastName: request.lastname,

@@ -5,4 +5,10 @@ const FindUser = async(condition)=>{
     })
     return userFind
 }
-module.exports = {FindUser}
+const FindAllUser = async(condition)=>{
+    const userFind = await Db.User.findAll({
+           where:condition
+   })
+   return userFind
+}
+module.exports = {FindUser,FindAllUser}

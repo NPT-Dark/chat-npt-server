@@ -1,8 +1,10 @@
 const Db = require("../../models");
 const { createUserDTO } = require("../models/userDTO");
 const { ComparePassword, HashPassword } = require("../services/secret");
-const { FindUser } = require("../services/userService");
+const { FindUser, FindAllUser } = require("../services/userService");
 const { ValidateLength, ValidateEmail } = require("../services/validate");
+const { FriendRqStatus } = require("../services/friendRqService");
+const { Op } = require("sequelize");
 const JWT = require("jsonwebtoken");
 //SignUp
 const SignUp = async (req, res) => {
@@ -69,91 +71,121 @@ const SignIn = async (req, res) => {
 //get user
 const GetUser = async (req, res) => {
   const findUser = await FindUser({
-    token:req.body.token,
+    token: req.body.token,
   });
-  if(findUser){
+  if (findUser) {
     return res.status(200).json(findUser);
-  }else{
+  } else {
     return res.status(500).json("Get user failed !");
   }
-}
+};
 //UpdateUser
 const UpdateUser = async (req, res) => {
-    if (req.body.password) {
-      try {
-        const findUser = await FindUser({
-          userName: req.body.username,
-        });
-        if (findUser) {
-          const checkPass = await ComparePassword(
-            req.body.password,
-            findUser.passWord
-          );
-          if (checkPass) {
-            try {
-              if (ValidateLength(req.body.newPassword.length, null, 6)) {
-                await Db.User.update(
-                  {
-                    passWord: await HashPassword(req.body.newPassword),
-                    updateAt: new Date().getTime(),
+  if (req.body.password) {
+    try {
+      const findUser = await FindUser({
+        userName: req.body.username,
+      });
+      if (findUser) {
+        const checkPass = await ComparePassword(
+          req.body.password,
+          findUser.passWord
+        );
+        if (checkPass) {
+          try {
+            if (ValidateLength(req.body.newPassword.length, null, 6)) {
+              await Db.User.update(
+                {
+                  passWord: await HashPassword(req.body.newPassword),
+                  updateAt: new Date().getTime(),
+                },
+                {
+                  where: {
+                    id: findUser.id,
                   },
-                  {
-                    where: {
-                      id: findUser.id,
-                    },
-                  }
-                );
-                return res.status(200).json("Update successfully !!");
-              }
-              return res
-                .status(500)
-                .json("Password must be more than 6 characters !");
-            } catch (err) {
-              return res.status(500).json(err.message);
+                }
+              );
+              return res.status(200).json("Update successfully !!");
             }
+            return res
+              .status(500)
+              .json("Password must be more than 6 characters !");
+          } catch (err) {
+            return res.status(500).json(err.message);
           }
-          return res.status(500).json("Password does not match !");
         }
-        return res.status(500).json("User could not be found !");
+        return res.status(500).json("Password does not match !");
+      }
+      return res.status(500).json("User could not be found !");
+    } catch (err) {
+      return res.status(500).json(err.message);
+    }
+  }
+  if (req.body.avatar) {
+    const findUser = await FindUser({
+      token: req.body.token,
+    });
+    if (findUser) {
+      try {
+        Db.User.update(
+          {
+            avatar: req.body.avatar,
+            updateAt: new Date().getTime(),
+          },
+          {
+            where: {
+              id: findUser.id,
+            },
+          }
+        );
+        return res.status(200).json("Update successfully !!");
       } catch (err) {
         return res.status(500).json(err.message);
       }
     }
-    if (req.body.avatar) {
-      const findUser = await FindUser({
-        token: req.body.token,
-      });
-      if (findUser) {
-        try {
-          Db.User.update(
-            {
-              avatar: req.body.avatar,
-              updateAt: new Date().getTime(),
-            },
-            {
-              where: {
-                id: findUser.id,
-              },
-            }
-          );
-          return res.status(200).json("Update successfully !!");
-        } catch (err) {
-          return res.status(500).json(err.message);
-        }
-      }
-      return res.status(500).json("Token could not be found !");
-    }
-
-};
-const cookieJwtAuth = (req, res, next) => {
-  try {
-    const token = req.cookies.token;
-    const user = JWT.verify(token, process.env.SECRET_KEY);
-    req.user = user;
-    next();
-  } catch (err) {
-    res.clearCookie("token");
-    return res.redirect("/");
+    return res.status(500).json("Token could not be found !");
   }
 };
-module.exports = { SignUp, SignIn, UpdateUser, cookieJwtAuth,GetUser };
+const GetUserAddFriend = async (req, res) => {
+  try {
+    const userAdd = await FindAllUser({
+      [Op.and]: [
+        {
+          firstName: {
+            [Op.like]: `%${req.body.firstName}%`,
+          },
+        },
+        {
+          lastName: {
+            [Op.like]: `%${req.body.lastName}%`,
+          },
+        },
+      ],
+    });
+    console.log(userAdd,req.body.firstName,req.body.lastName);
+    if (userAdd.length != 0) {
+      var IndexUserExist = null;
+      for(const [index, user] of userAdd.entries()){
+        delete user.userName;
+        delete user.passWord;
+        delete user.token;
+        delete user.createdAt;
+        delete user.updatedAt;
+        const status = await FriendRqStatus(user.dataValues.id,req.body.id)
+        user.dataValues.status = status;
+        if(user.dataValues.id === req.body.id){
+          IndexUserExist = index
+        }
+      }
+      if(IndexUserExist != null){
+        userAdd.splice(IndexUserExist,1);
+      }
+      return res.status(200).json(userAdd);
+    } else {
+      return res.status(500).json("This account could not be found !");
+    }
+  } catch (err) {
+    return res.status(500).json(err.message);
+  }
+};
+module.exports = { SignUp, SignIn, UpdateUser, GetUser, GetUserAddFriend };
