@@ -3,12 +3,12 @@ const ConnectDB = async () => {
   const sequelize = new Sequelize(process.env.DATABASE,process.env.USERNAME_DB,process.env.PASSWORD_DB, {
     host: process.env.HOST_DB,
     dialect: "postgres",
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false,
-      },
-    },
+    // dialectOptions: {
+    //   ssl: {
+    //     require: true,
+    //     rejectUnauthorized: false,
+    //   },
+    // },
   });
   try {
     await sequelize.authenticate();

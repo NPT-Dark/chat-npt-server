@@ -6,7 +6,7 @@ const cors = require("cors");
 const { Server } = require("socket.io");
 const { Op } = require("sequelize");
 const http = require("http");
-const { SendAddFriend, ExistFriendRq } = require("./src/services/ioServices");
+const { SendAddFriend, ExistFriendRq, CancelFriend } = require("./src/services/ioServices");
 const { FindFriendRq } = require("./src/services/friendRqService");
 require("dotenv").config();
 const app = express();
@@ -48,12 +48,15 @@ io.on("connection", (socket) => {
       socket.to(data.id_User_Recieve).emit("receive_invitation", getUser);
     }
   });
-  // socket.on("send_cancel_invitation", async (data) => {
-  //   if (await ExistFriendRq(data) === null) {
-  //     const getUser = await SendAddFriend(data);
-  //     socket.to(data.id_User_Recieve).emit("receive_cancel_invitation", getUser);
-  //   }
-  // });
+  socket.on("send_cancel_invitation", async (data) => {
+      await CancelFriend(data)
+      socket.to(data.id_User_Recieve).emit("receive_cancel_invitation", "Cancel successfully");
+  });
+  socket.on("accept_invitation", async (data) => {
+    await CancelFriend(data)
+    socket.to(data.id_User_Recieve).emit("receive_cancel_invitation", "Accept successfully");
+  });
+  //disconnect
   socket.on("disconnect", () => {
     console.log("User Disconnected", socket.id);
   });

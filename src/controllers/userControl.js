@@ -148,21 +148,25 @@ const UpdateUser = async (req, res) => {
 };
 const GetUserAddFriend = async (req, res) => {
   try {
+    const Condition = [        {
+      firstName: {
+        [Op.like]: `%${req.body.firstName}%`,
+      },
+    },
+    {
+      lastName: {
+        [Op.like]: `%${req.body.lastName}%`,
+      },
+    },]
+    if(req.body.type !== "find"){
+      
+        Condition.push({
+          id:req.body.id_User_Send || req.body.id_User_Recieve
+        })
+    }
     const userAdd = await FindAllUser({
-      [Op.and]: [
-        {
-          firstName: {
-            [Op.like]: `%${req.body.firstName}%`,
-          },
-        },
-        {
-          lastName: {
-            [Op.like]: `%${req.body.lastName}%`,
-          },
-        },
-      ],
+      [Op.and]: Condition
     });
-    console.log(userAdd,req.body.firstName,req.body.lastName);
     if (userAdd.length != 0) {
       var IndexUserExist = null;
       for(const [index, user] of userAdd.entries()){
