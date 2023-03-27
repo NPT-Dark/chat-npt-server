@@ -12,6 +12,7 @@ let sequelize;
 sequelize = new Sequelize(process.env.DATABASE,process.env.USERNAME_DB,process.env.PASSWORD_DB, {
   host: process.env.HOST_DB,
   dialect: "postgres",
+  logging: false
   // dialectOptions: {
   //   ssl: {
   //     require: true,

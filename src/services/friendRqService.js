@@ -1,5 +1,6 @@
 const Db = require("../../models");
 const { Op } = require("sequelize");
+const { FindExistFriend } = require("./roomService");
 const FindFriendRq = async(condition)=>{
     const userFind = await Db.FriendRq.findOne({
            where:condition
@@ -19,11 +20,15 @@ const FriendRqStatus=async(friend,user)=>{
           { id_User_Send: friend },
         ],
       });
+      const statusFriend = await FindExistFriend(user,friend)
       if (statusSend !== null) {
         return "send";
       }
       if (statusRecieve !== null) {
         return "recieve";
+      }
+      if(statusFriend === true){
+        return "friend";
       }
       if (statusSend === null && statusRecieve === null) {
         return "normal";

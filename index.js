@@ -6,8 +6,9 @@ const cors = require("cors");
 const { Server } = require("socket.io");
 const { Op } = require("sequelize");
 const http = require("http");
-const { SendAddFriend, ExistFriendRq, CancelFriend } = require("./src/services/ioServices");
+const { SendAddFriend, ExistFriendRq, CancelFriend, AcceptFriendRq, UnfriendService } = require("./src/services/ioServices");
 const { FindFriendRq } = require("./src/services/friendRqService");
+const { FindUser } = require("./src/services/userService");
 require("dotenv").config();
 const app = express();
 //middleware
@@ -35,7 +36,6 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   socket.on("join_room", (data) => {
     socket.join(data);
-    console.log(`User with ID: ${socket.id} joined room : ${data}`);
   });
   //Chat
   socket.on("send_message", (data) => {
@@ -53,9 +53,31 @@ io.on("connection", (socket) => {
       socket.to(data.id_User_Recieve).emit("receive_cancel_invitation", "Cancel successfully");
   });
   socket.on("accept_invitation", async (data) => {
-    await CancelFriend(data)
-    socket.to(data.id_User_Recieve).emit("receive_cancel_invitation", "Accept successfully");
+    await CancelFriend({
+      id_User_Recieve: data.id_User_Owner,
+      id_User_Send: data.id_User_Add,
+    })
+    await AcceptFriendRq(data)
+    await AcceptFriendRq({
+      id_User_Owner:data.id_User_Add,
+      id_User_Add:data.id_User_Owner,
+    })
+    const userDetail = await FindUser({
+      id:data.id_User_Owner
+    })
+    socket.to(data.id_User_Add).emit("receive_accept_invitation", `${userDetail.dataValues.firstName + " " + userDetail.dataValues.lastName} has accepted your friend request`);
   });
+  socket.on("send_unfriend", async (data) => {
+    const userDetail = await FindUser({
+      id:data.id_User_Owner
+    })
+    await UnfriendService(data)
+    await UnfriendService({
+      id_User_Owner:data.id_User_Unfriend,
+      id_User_Unfriend:data.id_User_Owner,
+    })
+    socket.to(data.id_User_Unfriend).emit("receive_unfriend", `${userDetail.dataValues.firstName + " " + userDetail.dataValues.lastName} has unfriended you`);
+});
   //disconnect
   socket.on("disconnect", () => {
     console.log("User Disconnected", socket.id);

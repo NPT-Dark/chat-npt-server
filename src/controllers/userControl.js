@@ -6,6 +6,7 @@ const { ValidateLength, ValidateEmail } = require("../services/validate");
 const { FriendRqStatus } = require("../services/friendRqService");
 const { Op } = require("sequelize");
 const JWT = require("jsonwebtoken");
+const { FindExistFriend } = require("../services/roomService");
 //SignUp
 const SignUp = async (req, res) => {
   const newUser = await createUserDTO(req.body);
@@ -158,12 +159,6 @@ const GetUserAddFriend = async (req, res) => {
         [Op.like]: `%${req.body.lastName}%`,
       },
     },]
-    if(req.body.type !== "find"){
-      
-        Condition.push({
-          id:req.body.id_User_Send || req.body.id_User_Recieve
-        })
-    }
     const userAdd = await FindAllUser({
       [Op.and]: Condition
     });
@@ -184,12 +179,16 @@ const GetUserAddFriend = async (req, res) => {
       if(IndexUserExist != null){
         userAdd.splice(IndexUserExist,1);
       }
+      if(req.body.type !== "find"){
+        const userType = userAdd.filter((item)=>{return item.dataValues.status === req.body.type})
+        return res.status(200).json(userType);
+      }
       return res.status(200).json(userAdd);
     } else {
       return res.status(500).json("This account could not be found !");
     }
   } catch (err) {
-    return res.status(500).json(err.message);
+    return res.status(500).json("This account could not be found !");
   }
 };
 module.exports = { SignUp, SignIn, UpdateUser, GetUser, GetUserAddFriend };

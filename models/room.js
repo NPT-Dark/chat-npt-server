@@ -19,9 +19,13 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.UUID
     },
-    id_User: {
+    id_User_Owner: {
         allowNull: false,
         type: DataTypes.UUID
+    },
+    list_Id_Friend: {
+      allowNull: false,
+      type: DataTypes.STRING
     },
     createdAt: {
       allowNull: false,
