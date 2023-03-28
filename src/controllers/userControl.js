@@ -6,7 +6,7 @@ const { ValidateLength, ValidateEmail } = require("../services/validate");
 const { FriendRqStatus } = require("../services/friendRqService");
 const { Op } = require("sequelize");
 const JWT = require("jsonwebtoken");
-const { FindExistFriend } = require("../services/roomService");
+const { FindExistFriend, FindRoom } = require("../services/roomService");
 //SignUp
 const SignUp = async (req, res) => {
   const newUser = await createUserDTO(req.body);
@@ -146,6 +146,23 @@ const UpdateUser = async (req, res) => {
     }
     return res.status(500).json("Token could not be found !");
   }
+  if(req.body.status){
+    const findUser = await FindUser({
+      token: req.body.token,
+    });
+    Db.User.update(
+      {
+        status: req.body.status,
+        updateAt: new Date().getTime(),
+      },
+      {
+        where: {
+          id: findUser.id,
+        },
+      }
+    );
+    return res.status(200).json("Load Status successfully !!");
+  }
 };
 const GetUserAddFriend = async (req, res) => {
   try {
@@ -191,4 +208,34 @@ const GetUserAddFriend = async (req, res) => {
     return res.status(500).json("This account could not be found !");
   }
 };
-module.exports = { SignUp, SignIn, UpdateUser, GetUser, GetUserAddFriend };
+const GetChatDetail = async (req,res) =>{
+  try{
+    const RoomDetail = await FindRoom({
+      id_User_Owner:req.body.id_User_Owner
+    })
+    if(RoomDetail[0].dataValues.list_Id_Friend === ''){
+      return res.status(200).json("You don't have any friends yet");
+    }
+    const listFriends = RoomDetail[0].dataValues.list_Id_Friend.split(",")
+    const ListFriendsDetails = [];
+    for(const item of listFriends){ 
+        const userDetail = await FindUser({
+          id:item
+        })
+        ListFriendsDetails.push({
+          id:userDetail.dataValues.id,
+          avatar:userDetail.dataValues.avatar,
+          firstName:userDetail.dataValues.firstName,
+          lastName:userDetail.dataValues.lastName,
+          gender:userDetail.dataValues.gender,
+          age:userDetail.dataValues.age,
+          email:userDetail.dataValues.email
+        })
+    }
+    return res.status(200).json(ListFriendsDetails);
+  }
+  catch(err){
+    return res.status(500).json(err.message);
+  }
+}
+module.exports = { SignUp, SignIn, UpdateUser, GetUser, GetUserAddFriend ,GetChatDetail};

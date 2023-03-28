@@ -15,7 +15,7 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin: ["http://localhost:3000", "http://localhost:3001","http://localhost:3002","https://chat-npt-client.vercel.app","chat-npt-client-khd43ytl0-npt-dark.vercel.app","https://chat-npt-client-git-s3-npt-dark.vercel.app"],
     methods: ["GET", "POST", "PUT"],
     credentials: true,
   })
@@ -28,7 +28,7 @@ app.use("/api/", routers);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin: ["http://localhost:3000", "http://localhost:3001","http://localhost:3002","https://chat-npt-client.vercel.app","chat-npt-client-khd43ytl0-npt-dark.vercel.app","https://chat-npt-client-git-s3-npt-dark.vercel.app"],
     methods: ["GET", "POST", "PUT"],
     credentials: true,
   },
@@ -37,10 +37,13 @@ io.on("connection", (socket) => {
   socket.on("join_room", (data) => {
     socket.join(data);
   });
-  //Chat
-  socket.on("send_message", (data) => {
-    socket.to(data.id_Room).emit("receive_message", data);
+  socket.on("join_chat", (id_User_Owner) => {
+    socket.join(id_User_Owner);
   });
+  //Chat
+  // socket.on("send_message", (data) => {
+  //   socket.to(data.id_Room).emit("receive_message", data);
+  // });
   //Friends
   socket.on("send_invitation", async (data) => {
     if (await ExistFriendRq(data) === null) {
@@ -80,7 +83,6 @@ io.on("connection", (socket) => {
 });
   //disconnect
   socket.on("disconnect", () => {
-    console.log("User Disconnected", socket.id);
   });
 });
 //server

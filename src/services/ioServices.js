@@ -55,8 +55,12 @@ const AcceptFriendRq = async (rq) => {
     if(findRoom.length === 0){
       await Db.Room.create(RoomDTO(rq,null));
     }else{
-      const listFriend = findRoom[0].dataValues.list_Id_Friend + "," + rq.id_User_Add;
-      await Db.Room.update(RoomDTO(rq,listFriend),{
+      var array = []
+      if(findRoom[0].dataValues.list_Id_Friend !== ''){
+        array = findRoom[0].dataValues.list_Id_Friend.split(',');
+      }
+      array.push(rq.id_User_Add);
+      await Db.Room.update(RoomDTO(rq,array.toString()),{
         where: {
           id_Room: findRoom[0].dataValues.id_Room
         }}

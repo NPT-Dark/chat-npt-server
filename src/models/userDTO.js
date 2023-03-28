@@ -14,6 +14,7 @@ const createUserDTO = async (request) =>{
         userName: request.username,
         passWord: passwordHash,
         email: request.email,
+        status:0,
         token : token,
         createAt: new Date().getTime(),
         updateAt: new Date().getTime()

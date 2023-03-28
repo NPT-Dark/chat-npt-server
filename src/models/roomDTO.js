@@ -4,7 +4,7 @@ const RoomDTO = (request,listFriend) =>{
     const newAdd = {
         id_Room: id,
         id_User_Owner: request.id_User_Owner,
-        list_Id_Friend:listFriend !== null ? listFriend : request.id_User_Add  ,
+        list_Id_Friend:listFriend !== null ? listFriend : request.id_User_Add,
         createAt: new Date().getTime(),
         updateAt: new Date().getTime()
     }
