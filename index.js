@@ -9,6 +9,7 @@ const http = require("http");
 const { SendAddFriend, ExistFriendRq, CancelFriend, AcceptFriendRq, UnfriendService } = require("./src/services/ioServices");
 const { FindFriendRq } = require("./src/services/friendRqService");
 const { FindUser } = require("./src/services/userService");
+const { FindRoom } = require("./src/services/roomService");
 require("dotenv").config();
 const app = express();
 //middleware
@@ -44,6 +45,16 @@ io.on("connection", (socket) => {
   // socket.on("send_message", (data) => {
   //   socket.to(data.id_Room).emit("receive_message", data);
   // });
+  socket.on("update_status", async (data) => {
+    const listFriend = await FindRoom({
+      id_User_Owner:data.id_User_Owner,
+    })
+    if(listFriend.length !== 0){
+      for(const id_Friend of listFriend){
+        socket.to(id_Friend).emit("receive_friend_status","Have a friend who is online");
+      }
+    }
+  });
   //Friends
   socket.on("send_invitation", async (data) => {
     if (await ExistFriendRq(data) === null) {
@@ -80,7 +91,7 @@ io.on("connection", (socket) => {
       id_User_Unfriend:data.id_User_Owner,
     })
     socket.to(data.id_User_Unfriend).emit("receive_unfriend", `${userDetail.dataValues.firstName + " " + userDetail.dataValues.lastName} has unfriended you`);
-});
+  });
   //disconnect
   socket.on("disconnect", () => {
   });
