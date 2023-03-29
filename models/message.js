@@ -19,10 +19,6 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.UUID
     },
-    id_Room: {
-        allowNull: false,
-        type: DataTypes.UUID
-      },
     id_User_Send: {
         allowNull: false,
         type: DataTypes.UUID

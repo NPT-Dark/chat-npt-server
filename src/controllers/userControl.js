@@ -7,6 +7,7 @@ const { FriendRqStatus } = require("../services/friendRqService");
 const { Op } = require("sequelize");
 const JWT = require("jsonwebtoken");
 const { FindExistFriend, FindRoom } = require("../services/roomService");
+const { FindMessage } = require("../services/messageService");
 //SignUp
 const SignUp = async (req, res) => {
   const newUser = await createUserDTO(req.body);
@@ -42,7 +43,10 @@ const SignIn = async (req, res) => {
         token: req.body.token,
       });
       if (findUser) {
-        return res.status(200).json(findUser.token);
+        return res.status(200).json({
+          id:findUser.dataValues.id,
+          token:findUser.dataValues.token
+        });
       }
       return res.status(200).json("Username could not be found !");
     } catch (err) {
@@ -59,7 +63,10 @@ const SignIn = async (req, res) => {
           findUser.passWord
         );
         if (checkPass) {
-          return res.status(200).json(findUser.token);
+          return res.status(200).json({
+            id:findUser.dataValues.id,
+            token:findUser.dataValues.token
+          });
         }
         return res.status(500).json("Password is incorrect !");
       }
@@ -146,7 +153,7 @@ const UpdateUser = async (req, res) => {
     }
     return res.status(500).json("Token could not be found !");
   }
-  if(req.body.status){
+  if (req.body.status) {
     const findUser = await FindUser({
       token: req.body.token,
     });
@@ -166,38 +173,42 @@ const UpdateUser = async (req, res) => {
 };
 const GetUserAddFriend = async (req, res) => {
   try {
-    const Condition = [        {
-      firstName: {
-        [Op.like]: `%${req.body.firstName}%`,
+    const Condition = [
+      {
+        firstName: {
+          [Op.like]: `%${req.body.firstName}%`,
+        },
       },
-    },
-    {
-      lastName: {
-        [Op.like]: `%${req.body.lastName}%`,
+      {
+        lastName: {
+          [Op.like]: `%${req.body.lastName}%`,
+        },
       },
-    },]
+    ];
     const userAdd = await FindAllUser({
-      [Op.and]: Condition
+      [Op.and]: Condition,
     });
     if (userAdd.length != 0) {
       var IndexUserExist = null;
-      for(const [index, user] of userAdd.entries()){
+      for (const [index, user] of userAdd.entries()) {
         delete user.userName;
         delete user.passWord;
         delete user.token;
         delete user.createdAt;
         delete user.updatedAt;
-        const status = await FriendRqStatus(user.dataValues.id,req.body.id)
+        const status = await FriendRqStatus(user.dataValues.id, req.body.id);
         user.dataValues.status = status;
-        if(user.dataValues.id === req.body.id){
-          IndexUserExist = index
+        if (user.dataValues.id === req.body.id) {
+          IndexUserExist = index;
         }
       }
-      if(IndexUserExist != null){
-        userAdd.splice(IndexUserExist,1);
+      if (IndexUserExist != null) {
+        userAdd.splice(IndexUserExist, 1);
       }
-      if(req.body.type !== "find"){
-        const userType = userAdd.filter((item)=>{return item.dataValues.status === req.body.type})
+      if (req.body.type !== "find") {
+        const userType = userAdd.filter((item) => {
+          return item.dataValues.status === req.body.type;
+        });
         return res.status(200).json(userType);
       }
       return res.status(200).json(userAdd);
@@ -208,34 +219,63 @@ const GetUserAddFriend = async (req, res) => {
     return res.status(500).json("This account could not be found !");
   }
 };
-const GetChatDetail = async (req,res) =>{
-  try{
+const GetChatDetail = async (req, res) => {
+  try {
     const RoomDetail = await FindRoom({
-      id_User_Owner:req.body.id_User_Owner
-    })
-    if(RoomDetail[0].dataValues.list_Id_Friend === ''){
+      id_User_Owner: req.body.id_User_Owner,
+    });
+    if (RoomDetail[0].dataValues.list_Id_Friend === "") {
       return res.status(200).json("You don't have any friends yet");
     }
-    const listFriends = RoomDetail[0].dataValues.list_Id_Friend.split(",")
+    const listFriends = RoomDetail[0].dataValues.list_Id_Friend.split(",");
     const ListFriendsDetails = [];
-    for(const item of listFriends){ 
-        const userDetail = await FindUser({
-          id:item
-        })
-        ListFriendsDetails.push({
-          id:userDetail.dataValues.id,
-          avatar:userDetail.dataValues.avatar,
-          firstName:userDetail.dataValues.firstName,
-          lastName:userDetail.dataValues.lastName,
-          gender:userDetail.dataValues.gender,
-          age:userDetail.dataValues.age,
-          email:userDetail.dataValues.email
-        })
+    for (const item of listFriends) {
+      const userDetail = await FindUser({
+        id: item,
+      });
+      ListFriendsDetails.push({
+        id: userDetail.dataValues.id,
+        avatar: userDetail.dataValues.avatar,
+        firstName: userDetail.dataValues.firstName,
+        lastName: userDetail.dataValues.lastName,
+        gender: userDetail.dataValues.gender,
+        age: userDetail.dataValues.age,
+        email: userDetail.dataValues.email,
+        status: userDetail.dataValues.status,
+      });
     }
     return res.status(200).json(ListFriendsDetails);
-  }
-  catch(err){
+  } catch (err) {
     return res.status(500).json(err.message);
   }
-}
-module.exports = { SignUp, SignIn, UpdateUser, GetUser, GetUserAddFriend ,GetChatDetail};
+};
+const GetMessage = async (req, res) => {
+  try {
+    const listMessage = await FindMessage({
+      [Op.or]: [
+        {
+          [Op.and]: [
+            {id_User_Send: req.body.id_User_Owner},
+          ],
+        },
+        {
+          [Op.and]: [
+            {id_User_Receive: req.body.id_User_Owner},
+          ],
+        },
+      ],
+    });
+    return res.status(200).json(listMessage);
+  } catch (err) {
+    return res.status(500).json(err.message);
+  }
+};
+module.exports = {
+  SignUp,
+  SignIn,
+  UpdateUser,
+  GetUser,
+  GetUserAddFriend,
+  GetChatDetail,
+  GetMessage,
+};

@@ -5,6 +5,7 @@ const { AddFriendRqDTO } = require("../models/friendRqDTO");
 const {RoomDTO} = require("../models/roomDTO");
 const { FindFriendRq } = require("./friendRqService");
 const { FindRoom } = require("./roomService");
+const { SendMessageDTO } = require("../models/SendMessageDTO");
 const SendAddFriend = async (rq) => {
   const newAddFriend = AddFriendRqDTO(rq);
   await Db.FriendRq.create(newAddFriend);
@@ -84,4 +85,12 @@ const UnfriendService = async (rq) => {
     }}
     );
 }
-module.exports = { SendAddFriend, ExistFriendRq, CancelFriend,AcceptFriendRq,UnfriendService };
+const SendMessage = async(rq)=>{
+  try{
+    await Db.Message.create(SendMessageDTO(rq))
+    return "Send Success";
+  }catch(err){
+    return err.message;
+  }
+}
+module.exports = { SendAddFriend, ExistFriendRq, CancelFriend,AcceptFriendRq,UnfriendService,SendMessage };

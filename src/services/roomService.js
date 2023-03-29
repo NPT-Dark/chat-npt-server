@@ -1,4 +1,5 @@
 const Db = require("../../models");
+const { FindUser } = require("./userService");
 const FindRoom = async(condition)=>{
     const userFind = await Db.Room.findAll({
            where:condition
@@ -16,4 +17,13 @@ const FindExistFriend=async(id,item)=>{
     }
     return false
 }
-module.exports = {FindRoom,FindExistFriend}
+const UpdateStatus = async(id,status)=>{
+    await Db.User.update({
+        status:status
+    },{
+        where:{
+            id:id
+        }
+    })
+}
+module.exports = {FindRoom,FindExistFriend,UpdateStatus}

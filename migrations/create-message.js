@@ -8,10 +8,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.UUID
       },
-      id_Room: {
-          allowNull: false,
-          type: Sequelize.UUID
-        },
       id_User_Send: {
           allowNull: false,
           type: Sequelize.UUID

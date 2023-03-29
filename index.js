@@ -4,15 +4,13 @@ const ConnectDB = require("./src/database/connectDb");
 const routers = require("./src/routers");
 const cors = require("cors");
 const { Server } = require("socket.io");
-const { Op } = require("sequelize");
 const http = require("http");
-const { SendAddFriend, ExistFriendRq, CancelFriend, AcceptFriendRq, UnfriendService } = require("./src/services/ioServices");
-const { FindFriendRq } = require("./src/services/friendRqService");
+const { SendAddFriend, ExistFriendRq, CancelFriend, AcceptFriendRq, UnfriendService, SendMessage } = require("./src/services/ioServices");
 const { FindUser } = require("./src/services/userService");
-const { FindRoom } = require("./src/services/roomService");
+const { FindRoom, UpdateStatus } = require("./src/services/roomService");
 require("dotenv").config();
 const app = express();
-//middleware
+//TODO: Middleware
 app.use(express.json());
 app.use(
   cors({
@@ -21,11 +19,11 @@ app.use(
     credentials: true,
   })
 );
-//connect db
+//TODO:Connect Database
 ConnectDB();
-//router
+//TODO:Router
 app.use("/api/", routers);
-//socket
+//TODO:Socket
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -37,35 +35,42 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   socket.on("join_room", (data) => {
     socket.join(data);
+    console.log(`${data} da vao phong`);
   });
-  socket.on("join_chat", (id_User_Owner) => {
-    socket.join(id_User_Owner);
+  //TODO:Chat
+    //**Send Message */
+  socket.on("send_message", async(data) => {
+    const send = await SendMessage(data)
+    console.log(data.id_User_Receive);
+    socket.to(data.id_User_Receive).emit("receive_message",send );
   });
-  //Chat
-  // socket.on("send_message", (data) => {
-  //   socket.to(data.id_Room).emit("receive_message", data);
-  // });
+    //**Update Status(Online,Offline) */
   socket.on("update_status", async (data) => {
     const listFriend = await FindRoom({
       id_User_Owner:data.id_User_Owner,
     })
+    await UpdateStatus(data.id_User_Owner,data.status)
     if(listFriend.length !== 0){
-      for(const id_Friend of listFriend){
+      const array = listFriend[0].dataValues.list_Id_Friend.split(",");
+      for(const id_Friend of array){
         socket.to(id_Friend).emit("receive_friend_status","Have a friend who is online");
       }
     }
   });
-  //Friends
+  //TODO: Friends
+    //**Send Invitation */
   socket.on("send_invitation", async (data) => {
     if (await ExistFriendRq(data) === null) {
       const getUser = await SendAddFriend(data);
       socket.to(data.id_User_Recieve).emit("receive_invitation", getUser);
     }
   });
+    //**Cancel Invitaiton */
   socket.on("send_cancel_invitation", async (data) => {
       await CancelFriend(data)
       socket.to(data.id_User_Recieve).emit("receive_cancel_invitation", "Cancel successfully");
   });
+    //**Accept Invitation */
   socket.on("accept_invitation", async (data) => {
     await CancelFriend({
       id_User_Recieve: data.id_User_Owner,
@@ -81,6 +86,7 @@ io.on("connection", (socket) => {
     })
     socket.to(data.id_User_Add).emit("receive_accept_invitation", `${userDetail.dataValues.firstName + " " + userDetail.dataValues.lastName} has accepted your friend request`);
   });
+  //** Unfriend */
   socket.on("send_unfriend", async (data) => {
     const userDetail = await FindUser({
       id:data.id_User_Owner
@@ -92,11 +98,11 @@ io.on("connection", (socket) => {
     })
     socket.to(data.id_User_Unfriend).emit("receive_unfriend", `${userDetail.dataValues.firstName + " " + userDetail.dataValues.lastName} has unfriended you`);
   });
-  //disconnect
+  //** Disconnect*/
   socket.on("disconnect", () => {
   });
 });
-//server
+//TODO: Server
 server.listen(2401, () => {
   console.log("Server listening on port " + process.env.PORT);
 });
