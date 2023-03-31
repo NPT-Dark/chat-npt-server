@@ -93,4 +93,21 @@ const SendMessage = async(rq)=>{
     return err.message;
   }
 }
-module.exports = { SendAddFriend, ExistFriendRq, CancelFriend,AcceptFriendRq,UnfriendService,SendMessage };
+const UpdateSeen = async (rq) => {
+  try {
+        await Db.Message.update({
+          Seen:true
+        },
+          {
+            where:{
+              id_User_Send:rq.id_User_Receive ,
+              id_User_Receive: rq.id_User_Send,
+            }
+          }
+        )
+    return true
+  } catch (err) {
+    return false;
+  }
+}
+module.exports = { SendAddFriend, ExistFriendRq, CancelFriend,AcceptFriendRq,UnfriendService,SendMessage,UpdateSeen };

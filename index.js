@@ -5,9 +5,10 @@ const routers = require("./src/routers");
 const cors = require("cors");
 const { Server } = require("socket.io");
 const http = require("http");
-const { SendAddFriend, ExistFriendRq, CancelFriend, AcceptFriendRq, UnfriendService, SendMessage } = require("./src/services/ioServices");
+const { SendAddFriend, ExistFriendRq, CancelFriend, AcceptFriendRq, UnfriendService, SendMessage, UpdateSeen } = require("./src/services/ioServices");
 const { FindUser } = require("./src/services/userService");
 const { FindRoom, UpdateStatus } = require("./src/services/roomService");
+const { FindMessage } = require("./src/services/messageService");
 require("dotenv").config();
 const app = express();
 //TODO: Middleware
@@ -41,7 +42,6 @@ io.on("connection", (socket) => {
     //**Send Message */
   socket.on("send_message", async(data) => {
     const send = await SendMessage(data)
-    console.log(data.id_User_Receive);
     socket.to(data.id_User_Receive).emit("receive_message",send );
   });
     //**Update Status(Online,Offline) */
@@ -57,6 +57,19 @@ io.on("connection", (socket) => {
       }
     }
   });
+    //*Seen Message */
+  socket.on("send_seen_message",async (data) => {
+    const update = await UpdateSeen(data);
+    if(update){
+      const message = await FindMessage({
+        id_User_Receive:data.id_User_Send,
+        id_User_Send:data.id_User_Receive,
+      })
+      if(message.length > 0){
+        socket.to(data.id_User_Receive).emit("receive_seen_message",message[message.length - 1].id_Message);
+      }
+    }
+  })
   //TODO: Friends
     //**Send Invitation */
   socket.on("send_invitation", async (data) => {

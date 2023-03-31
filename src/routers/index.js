@@ -9,6 +9,5 @@ routers.post("/user/finduser",GetUserAddFriend);
 routers.put("/user/update", UpdateUser);
 routers.post("/user/getchat",GetChatDetail);
 routers.post("/user/getmessage",GetMessage);
-routers.post("/user/updateseen",UpdateSeen);
 
 module.exports = routers;

@@ -270,23 +270,6 @@ const GetMessage = async (req, res) => {
     return res.status(500).json(err.message);
   }
 };
-const UpdateSeen = async (req,res) => {
-  try {
-        await Db.Message.update({
-          Seen:true
-        },
-          {
-            where:{
-              id_User_Send: req.body.id_User_Send,
-              id_User_Receive: req.body.id_User_Receive,
-            }
-          }
-        )
-    return res.status(200).json("Seen updated");
-  } catch (err) {
-    return res.status(500).json(err.message);
-  }
-}
 module.exports = {
   SignUp,
   SignIn,
@@ -294,6 +277,5 @@ module.exports = {
   GetUser,
   GetUserAddFriend,
   GetChatDetail,
-  GetMessage,
-  UpdateSeen
+  GetMessage
 };
