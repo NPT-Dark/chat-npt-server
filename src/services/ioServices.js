@@ -6,6 +6,7 @@ const {RoomDTO} = require("../models/roomDTO");
 const { FindFriendRq } = require("./friendRqService");
 const { FindRoom } = require("./roomService");
 const { SendMessageDTO } = require("../models/SendMessageDTO");
+const { NotificationDTO } = require("../models/notificationDTO");
 const SendAddFriend = async (rq) => {
   const newAddFriend = AddFriendRqDTO(rq);
   await Db.FriendRq.create(newAddFriend);
@@ -110,4 +111,29 @@ const UpdateSeen = async (rq) => {
     return false;
   }
 }
-module.exports = { SendAddFriend, ExistFriendRq, CancelFriend,AcceptFriendRq,UnfriendService,SendMessage,UpdateSeen };
+const AddNotification = async (rq) => {
+  try{
+    var userSendDT = await FindUser({
+      id:rq.id_User_Send
+    })
+    var message = ""
+    if(rq.type === "send-invite"){
+      message = "You received a friend request from " + userSendDT.firstName + " " + userSendDT.lastName
+    }
+    if(rq.type === "accept-invite"){
+      message = userSendDT.firstName + " " + userSendDT.lastName + " accepted your friend request"
+    }
+    if(rq.type === "unfriend"){
+      message = userSendDT.firstName + " " + userSendDT.lastName + " unfriended you"
+    }
+    var newNoti = NotificationDTO({
+      ...NotificationDTO,
+      id_User:rq.id_User_Recieve,
+      Message:message
+    });
+    await Db.Notification.create(newNoti)
+  }catch(err){
+    throw new Error(err.message)
+  }
+}
+module.exports = { SendAddFriend, ExistFriendRq, CancelFriend,AcceptFriendRq,UnfriendService,SendMessage,UpdateSeen,AddNotification };

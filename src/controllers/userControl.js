@@ -44,8 +44,8 @@ const SignIn = async (req, res) => {
       });
       if (findUser) {
         return res.status(200).json({
-          id:findUser.dataValues.id,
-          token:findUser.dataValues.token
+          id: findUser.dataValues.id,
+          token: findUser.dataValues.token,
         });
       }
       return res.status(200).json("Username could not be found !");
@@ -64,8 +64,8 @@ const SignIn = async (req, res) => {
         );
         if (checkPass) {
           return res.status(200).json({
-            id:findUser.dataValues.id,
-            token:findUser.dataValues.token
+            id: findUser.dataValues.id,
+            token: findUser.dataValues.token,
           });
         }
         return res.status(500).json("Password is incorrect !");
@@ -254,18 +254,48 @@ const GetMessage = async (req, res) => {
     const listMessage = await FindMessage({
       [Op.or]: [
         {
-          [Op.and]: [
-            {id_User_Send: req.body.id_User_Owner},
-          ],
+          [Op.and]: [{ id_User_Send: req.body.id_User_Owner }],
         },
         {
-          [Op.and]: [
-            {id_User_Receive: req.body.id_User_Owner},
-          ],
+          [Op.and]: [{ id_User_Receive: req.body.id_User_Owner }],
         },
       ],
     });
     return res.status(200).json(listMessage);
+  } catch (err) {
+    return res.status(500).json(err.message);
+  }
+};
+const GetNotififation = async (req, res) => {
+  try {
+    const notifications = await Db.Notification.findAll({
+      where: {
+        id_User: req.body.id,
+      },
+    });
+    return res.status(200).json(notifications);
+  } catch (err) {
+    return res.status(500).json(err.message);
+  }
+};
+const UpdateNotification = async (req, res) => {
+  try {
+    const notifications = await Db.Notification.update(
+      {
+        Seen: true,
+      },
+      {
+        where: {
+          id_User: req.body.id,
+        },
+      }
+    );
+    const notificationsDT = await Db.Notification.findAll({
+      where: {
+        id_User: req.body.id,
+      },
+    });
+    return res.status(200).json(notificationsDT);
   } catch (err) {
     return res.status(500).json(err.message);
   }
@@ -277,5 +307,7 @@ module.exports = {
   GetUser,
   GetUserAddFriend,
   GetChatDetail,
-  GetMessage
+  GetMessage,
+  GetNotififation,
+  UpdateNotification
 };

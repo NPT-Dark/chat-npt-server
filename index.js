@@ -5,7 +5,7 @@ const routers = require("./src/routers");
 const cors = require("cors");
 const { Server } = require("socket.io");
 const http = require("http");
-const { SendAddFriend, ExistFriendRq, CancelFriend, AcceptFriendRq, UnfriendService, SendMessage, UpdateSeen } = require("./src/services/ioServices");
+const { SendAddFriend, ExistFriendRq, CancelFriend, AcceptFriendRq, UnfriendService, SendMessage, UpdateSeen, AddNotification } = require("./src/services/ioServices");
 const { FindUser } = require("./src/services/userService");
 const { FindRoom, UpdateStatus } = require("./src/services/roomService");
 const { FindMessage } = require("./src/services/messageService");
@@ -75,7 +75,12 @@ io.on("connection", (socket) => {
   socket.on("send_invitation", async (data) => {
     if (await ExistFriendRq(data) === null) {
       const getUser = await SendAddFriend(data);
+      await AddNotification({
+        ...data,
+        type:'send-invite'
+      })
       socket.to(data.id_User_Recieve).emit("receive_invitation", getUser);
+      socket.to(data.id_User_Recieve).emit("receive_notification","you received a notification !")
     }
   });
     //**Cancel Invitaiton */
@@ -89,6 +94,11 @@ io.on("connection", (socket) => {
       id_User_Recieve: data.id_User_Owner,
       id_User_Send: data.id_User_Add,
     })
+    await AddNotification({
+      id_User_Send:data.id_User_Owner,
+      id_User_Recieve:data.id_User_Add,
+      type:'accept-invite'
+    })
     await AcceptFriendRq(data)
     await AcceptFriendRq({
       id_User_Owner:data.id_User_Add,
@@ -98,6 +108,7 @@ io.on("connection", (socket) => {
       id:data.id_User_Owner
     })
     socket.to(data.id_User_Add).emit("receive_accept_invitation", `${userDetail.dataValues.firstName + " " + userDetail.dataValues.lastName} has accepted your friend request`);
+    socket.to(data.id_User_Add).emit("receive_notification","you received a notification !")
   });
   //** Unfriend */
   socket.on("send_unfriend", async (data) => {
@@ -109,7 +120,13 @@ io.on("connection", (socket) => {
       id_User_Owner:data.id_User_Unfriend,
       id_User_Unfriend:data.id_User_Owner,
     })
+    await AddNotification({
+      id_User_Send:data.id_User_Owner,
+      id_User_Recieve:data.id_User_Unfriend,
+      type:'unfriend'
+    })
     socket.to(data.id_User_Unfriend).emit("receive_unfriend", `${userDetail.dataValues.firstName + " " + userDetail.dataValues.lastName} has unfriended you`);
+    socket.to(data.id_User_Unfriend).emit("receive_notification","you received a notification !")
   });
   //** Disconnect*/
   socket.on("disconnect", () => {
