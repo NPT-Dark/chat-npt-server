@@ -5,10 +5,9 @@ const { FindUser, FindAllUser } = require("../services/userService");
 const { ValidateLength, ValidateEmail } = require("../services/validate");
 const { FriendRqStatus } = require("../services/friendRqService");
 const { Op } = require("sequelize");
-const JWT = require("jsonwebtoken");
-const { FindExistFriend, FindRoom } = require("../services/roomService");
+const { FindRoom } = require("../services/roomService");
 const { FindMessage } = require("../services/messageService");
-//SignUp
+//TODO Sign Up
 const SignUp = async (req, res) => {
   const newUser = await createUserDTO(req.body);
   if (
@@ -35,7 +34,7 @@ const SignUp = async (req, res) => {
     return res.status(500).json("Please check validate fields !");
   }
 };
-//SignIn
+//TODO Sign In
 const SignIn = async (req, res) => {
   if (req.body.token) {
     try {
@@ -76,7 +75,7 @@ const SignIn = async (req, res) => {
     }
   }
 };
-//get user
+//TODO Get user
 const GetUser = async (req, res) => {
   const findUser = await FindUser({
     token: req.body.token,
@@ -87,7 +86,7 @@ const GetUser = async (req, res) => {
     return res.status(500).json("Get user failed !");
   }
 };
-//UpdateUser
+//TODO Update User
 const UpdateUser = async (req, res) => {
   if (req.body.password) {
     try {
@@ -171,6 +170,7 @@ const UpdateUser = async (req, res) => {
     return res.status(200).json("Load Status successfully !!");
   }
 };
+//TODO Get User To Add Friend
 const GetUserAddFriend = async (req, res) => {
   try {
     const Condition = [
@@ -219,13 +219,14 @@ const GetUserAddFriend = async (req, res) => {
     return res.status(500).json("This account could not be found !");
   }
 };
+//TODO Get Friend to Chat
 const GetChatDetail = async (req, res) => {
   try {
     const RoomDetail = await FindRoom({
       id_User_Owner: req.body.id_User_Owner,
     });
     if (RoomDetail[0].dataValues.list_Id_Friend === "") {
-      return res.status(200).json("You don't have any friends yet");
+      return res.status(200).json([]);
     }
     const listFriends = RoomDetail[0].dataValues.list_Id_Friend.split(",");
     const ListFriendsDetails = [];
@@ -249,6 +250,7 @@ const GetChatDetail = async (req, res) => {
     return res.status(500).json(err.message);
   }
 };
+//TODO Get Message
 const GetMessage = async (req, res) => {
   try {
     const listMessage = await FindMessage({
@@ -266,7 +268,8 @@ const GetMessage = async (req, res) => {
     return res.status(500).json(err.message);
   }
 };
-const GetNotififation = async (req, res) => {
+//TODO Get Notification
+const GetNotification = async (req, res) => {
   try {
     const notifications = await Db.Notification.findAll({
       where: {
@@ -278,9 +281,10 @@ const GetNotififation = async (req, res) => {
     return res.status(500).json(err.message);
   }
 };
+//TODO Update Notification
 const UpdateNotification = async (req, res) => {
   try {
-    const notifications = await Db.Notification.update(
+    await Db.Notification.update(
       {
         Seen: true,
       },
@@ -300,6 +304,17 @@ const UpdateNotification = async (req, res) => {
     return res.status(500).json(err.message);
   }
 };
+//TODO Get Ava
+const GetAva = async (req, res) => {
+  try{
+    const userdt = await FindUser({
+      id: req.body.id_User_Seen
+    })
+    return res.status(200).json(userdt.avatar);
+  }catch(err){
+    return res.status(500).json(err.message);
+  }
+}
 module.exports = {
   SignUp,
   SignIn,
@@ -308,6 +323,7 @@ module.exports = {
   GetUserAddFriend,
   GetChatDetail,
   GetMessage,
-  GetNotififation,
-  UpdateNotification
+  GetNotification,
+  UpdateNotification,
+  GetAva
 };

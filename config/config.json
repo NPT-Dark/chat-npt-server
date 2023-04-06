@@ -12,6 +12,7 @@
     "database": "Chat-NPT",
     "host": "ep-shiny-field-323059.us-east-2.aws.neon.tech",
     "dialect": "postgres",
+    "port":5555,
     "dialectOptions": {
       "ssl": {
         "require": true,
